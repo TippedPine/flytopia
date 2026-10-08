@@ -1,0 +1,258 @@
+/* Flytopia v0.3 - draw orchard scenery INSIDE the original FlyBrain canvas.
+   Decorative only; normal food/brain/motor code still belongs to FlyBrain. */
+(function () {
+  "use strict";
+  let cachedCanvas = null;
+  let cachedKey = "";
+  const garden = {
+    enabled: true,
+    draw: function (target, width, height) {
+      if (!this.enabled || width <= 0 || height <= 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const key = [width, height, dpr].join("|");
+      if (key !== cachedKey) {
+        cachedCanvas = document.createElement("canvas");
+        cachedCanvas.width = Math.max(1, Math.round(width * dpr));
+        cachedCanvas.height = Math.max(1, Math.round(height * dpr));
+        const cacheCtx = cachedCanvas.getContext("2d");
+        if (!cacheCtx) return;
+        cacheCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        paint(cacheCtx, width, height);
+        cachedKey = key;
+      }
+      if (cachedCanvas) {
+        target.save();
+        target.drawImage(cachedCanvas, 0, 0, width, height);
+        target.restore();
+      }
+    }
+  };
+  window.FlytopiaGarden = garden;
+  function setupUI() {
+    // The old overlay must not be used; garden now renders behind food/fly.
+    const obsolete = document.getElementById("flytopia-garden-layer");
+    if (obsolete) obsolete.remove();
+    const toolbar = document.querySelector("#toolbar .toolbar-left");
+    if (toolbar && !document.getElementById("flytopia-garden-toggle")) {
+      const toggle = document.createElement("button");
+      toggle.id = "flytopia-garden-toggle";
+      toggle.type = "button";
+      toggle.className = "tool-btn";
+      toggle.textContent = "Garden: On";
+      toggle.title = "Toggle decorative scenery. Neural simulation remains active.";
+      toggle.setAttribute("aria-pressed", "true");
+      const feed = toolbar.querySelector('[data-tool="feed"]');
+      if (feed) feed.insertAdjacentElement("afterend", toggle);
+      else toolbar.prepend(toggle);
+      toggle.addEventListener("click", function () {
+        garden.enabled = !garden.enabled;
+        toggle.textContent = garden.enabled ? "Garden: On" : "Garden: Off";
+        toggle.setAttribute("aria-pressed", String(garden.enabled));
+        const caption = document.getElementById("flytopia-garden-caption");
+        if (caption) caption.hidden = !garden.enabled;
+      });
+    }
+    if (!document.getElementById("flytopia-garden-caption")) {
+      const caption = document.createElement("div");
+      caption.id = "flytopia-garden-caption";
+      caption.textContent = "SANCTUARY GROVE / SCENERY ONLY / USE FEED FOR REAL FOOD";
+      document.body.appendChild(caption);
+    }
+  }
+    function rng(seed) {
+      let v = seed >>> 0;
+      return function () { v = (Math.imul(1664525, v) + 1013904223) >>> 0; return v / 4294967296; };
+    }
+    function leaf(c, x, y, rx, ry, tilt, fill) {
+      c.save(); c.translate(x, y); c.rotate(tilt);
+      c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      c.fillStyle = fill; c.fill(); c.restore();
+    }
+    function clump(c, x, y, scale, seed) {
+      const random = rng(seed);
+      c.save(); c.translate(x, y); c.scale(scale, scale);
+      c.lineWidth = 3;
+      c.strokeStyle = "rgba(90, 128, 68, 0.55)";
+      for (let i = 0; i < 17; i++) {
+        const a = random() * Math.PI * 2;
+        const dist = 14 + random() * 55;
+        const xx = Math.cos(a) * dist;
+        const yy = Math.sin(a) * dist * .7;
+        c.beginPath(); c.moveTo(0, 20); c.quadraticCurveTo(xx * .5, yy * .4, xx, yy); c.stroke();
+        const palette = ["#376b45", "#467e4a", "#6ca466", "#2b5d44", "#8cad61"];
+        leaf(c, xx, yy, 15 + random() * 13, 7 + random() * 8, a, palette[Math.floor(random() * palette.length)]);
+      }
+      c.restore();
+    }
+    function banana(c, x, y, scale) {
+      c.save(); c.translate(x, y); c.scale(scale, scale);
+      c.beginPath(); c.moveTo(-35, -15); c.bezierCurveTo(-17, 15, 18, 17, 40, -20);
+      c.bezierCurveTo(14, 38, -33, 30, -35, -15); c.closePath();
+      c.fillStyle = "#f4c968"; c.fill(); c.strokeStyle = "#b18b37"; c.lineWidth = 3; c.stroke();
+      c.beginPath(); c.arc(38, -20, 3, 0, 7); c.fillStyle = "#5b4d27"; c.fill();
+      c.restore();
+    }
+    function apple(c, x, y, scale) {
+      c.save(); c.translate(x, y); c.scale(scale, scale);
+      c.fillStyle = "#c94e4b";
+      c.beginPath(); c.arc(-14, 0, 20, 0, Math.PI * 2); c.arc(13, 0, 20, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.moveTo(0, -14); c.lineTo(4, -31); c.strokeStyle = "#79552a"; c.lineWidth = 4; c.stroke();
+      leaf(c, 12, -29, 14, 6, -.45, "#78b268");
+      c.restore();
+    }
+    function berry(c, x, y, scale) {
+      c.save(); c.translate(x, y); c.scale(scale, scale);
+      c.beginPath(); c.moveTo(-20, -12); c.bezierCurveTo(-37, 5, -6, 38, 0, 41);
+      c.bezierCurveTo(7, 37, 37, 3, 20, -12); c.quadraticCurveTo(0, -27, -20, -12); c.closePath();
+      c.fillStyle = "#dc6566"; c.fill();
+      c.fillStyle = "#f8d797";
+      for (let i = -1; i <= 1; i++) for (let j = 0; j < 2; j++) {
+        c.beginPath(); c.ellipse(i*9+(j?4:0), -1+j*16, 2, 3.2, -.25, 0, Math.PI*2); c.fill();
+      }
+      for (let i = -1; i <= 1; i++) leaf(c, i * 12, -19, 13, 5, i*.65, "#6ba75f");
+      c.restore();
+    }
+    function patch(c, x, y, size, kind, label) {
+      const glow = c.createRadialGradient(x, y, 3, x, y, size*1.4);
+      glow.addColorStop(0, "rgba(185, 219, 137, .16)");
+      glow.addColorStop(1, "rgba(42, 85, 46, 0)");
+      c.fillStyle = glow; c.fillRect(x-size*1.5, y-size*1.5, size*3, size*3);
+      clump(c, x, y + 20, .48 * size/65, Math.round(x*10));
+      const draw = kind === "banana" ? banana : kind === "apple" ? apple : berry;
+      draw(c, x, y-13, Math.min(1.1, Math.max(.65, size/65)));
+      c.textAlign = "center"; c.font = "600 12px system-ui, sans-serif";
+      c.fillStyle = "rgba(242, 250, 217, 0.88)"; c.fillText(label, x, y + size*.95);
+    }
+    function paint(c, w, h) {
+      c.clearRect(0, 0, w, h);
+      const wash = c.createLinearGradient(0, 0, 0, h);
+      wash.addColorStop(0, "rgba(39, 94, 71, .36)");
+      wash.addColorStop(.55, "rgba(25, 78, 51, .48)");
+      wash.addColorStop(1, "rgba(39, 86, 58, .53)");
+      c.fillStyle = wash; c.fillRect(0, 0, w, h);
+      const sunshine = c.createRadialGradient(w*.61, -h*.08, 0, w*.61, -h*.08, Math.max(w,h)*.56);
+      sunshine.addColorStop(0, "rgba(254, 230, 144, .29)");
+      sunshine.addColorStop(.65, "rgba(194, 205, 133, .07)");
+      sunshine.addColorStop(1, "rgba(194, 205, 133, 0)");
+      c.fillStyle = sunshine; c.fillRect(0, 0, w, h);
+      // A gently winding path. Kept translucent so it never hides the fly.
+      c.beginPath(); c.moveTo(w*.06, h*.73); c.bezierCurveTo(w*.32, h*.76, w*.42, h*.39, w*.73, h*.37);
+      c.strokeStyle = "rgba(226, 210, 158, .10)"; c.lineWidth = Math.min(80,w*.075); c.stroke();
+      c.strokeStyle = "rgba(247, 235, 189, .14)"; c.lineWidth = 1.5; c.stroke();
+      // Soft foliage stays near the perimeter: this is still a simulation viewport.
+      const k = Math.max(.6, Math.min(1.45, w/1300));
+      clump(c, w*.03, h*.09, 1.7*k, 62);
+      clump(c, w*.95, h*.04, 1.55*k, 82);
+      clump(c, w*.02, h*.77, 1.5*k, 98);
+      clump(c, w*.98, h*.77, 1.7*k, 141);
+      clump(c, w*.4, h*.99, 1.35*k, 132);
+      // A tiny pond, also decorative for now.
+      c.save(); c.translate(w*.81, h*.64);
+      c.beginPath(); c.ellipse(0, 0, 80*k, 29*k, -.13, 0, Math.PI*2);
+      c.fillStyle = "rgba(98, 176, 177, .44)"; c.fill();
+      c.strokeStyle = "rgba(167, 213, 174, .6)"; c.lineWidth = 3; c.stroke();
+      c.beginPath(); c.ellipse(-9*k, -5*k, 34*k, 7*k, -.13, 0, Math.PI*2);
+      c.strokeStyle = "rgba(212, 251, 216, .3)"; c.lineWidth = 2; c.stroke();
+      c.restore();
+      c.font = "600 12px system-ui, sans-serif"; c.fillStyle = "rgba(238, 249, 229, .8)";
+      c.textAlign = "center"; c.fillText("Quiet pond (scenery)", w*.81, h*.64+48*k);
+      // Fruit pictured here is art. Real food comes from the native Feed tool.
+      patch(c, w*.18, h*.5, 65*k, "banana", "Banana grove");
+      patch(c, w*.63, h*.22, 58*k, "apple", "Apple clearing");
+      patch(c, w*.61, h*.68, 57*k, "berry", "Berry meadow");
+      // A few fireflies / flowers, seeded for a reproducible scene.
+      const random = rng(20261007);
+      for (let i = 0; i < 65; i++) {
+        const x = random()*w, y = random()*h;
+        c.beginPath(); c.arc(x, y, 1+random()*2, 0, Math.PI*2);
+        c.fillStyle = i%3 === 0 ? "rgba(253, 230, 156, .54)" : "rgba(175, 226, 159, .24)"; c.fill();
+      }
+    }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupUI, {once:true});
+  } else setupUI();
+})();
+
+
+/* Flytopia v0.4 - Native food bridge. Decorative fruit patches now correspond
+   to ordinary FlyBrain food objects. No network, motor, or neuron code changed.
+   Note: the original model uses hard-coded behavioral biases alongside neural
+   activity; its food sensor is a threshold, not a physically modeled odor plume. */
+(function () {
+  "use strict";
+  const garden = window.FlytopiaGarden;
+  if (!garden) return;
+  const patches = [
+    {name: "Banana", x: 0.18, y: 0.50, item: null, emptyAt: 0},
+    {name: "Apple", x: 0.63, y: 0.22, item: null, emptyAt: 0},
+    {name: "Berry", x: 0.61, y: 0.68, item: null, emptyAt: 0}
+  ];
+  let enabled = true;
+  const regrowDelayMs = 30000;
+  function foodPosition(p) {
+    // Keep the native pellet close to the artwork on the same world canvas.
+    // Its small offset makes it visible instead of hiding under the fruit icon.
+    return {x: innerWidth * p.x + 44, y: innerHeight * p.y + 17};
+  }
+  garden.updateFood = function (items) {
+    if (!Array.isArray(items)) return;
+    const now = Date.now();
+    for (const p of patches) {
+      if (!enabled) {
+        if (p.item) {
+          const at = items.indexOf(p.item);
+          if (at >= 0) items.splice(at, 1);
+        }
+        p.item = null;
+        p.emptyAt = 0;
+        continue;
+      }
+      if (p.item && !items.includes(p.item)) {
+        // Native feeding has consumed the pellet, or Clear removed it.
+        p.item = null;
+        p.emptyAt = now;
+      }
+      if (!p.item && (p.emptyAt === 0 || now - p.emptyAt >= regrowDelayMs)) {
+        const pos = foodPosition(p);
+        p.item = {x: pos.x, y: pos.y, radius: 10, feedStart: 0,
+                  feedDuration: 0, eaten: 0, flytopiaOrchard: p.name};
+        items.push(p.item);
+        p.emptyAt = 0;
+      }
+      if (p.item) {
+        // Preserve amount eaten, but move with the artwork after resizing.
+        const pos = foodPosition(p);
+        p.item.x = pos.x;
+        p.item.y = pos.y;
+      }
+    }
+  };
+  function setupOrchardControls() {
+    const toolbar = document.querySelector('#toolbar .toolbar-left');
+    if (!toolbar || document.getElementById('flytopia-orchard-toggle')) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = 'flytopia-orchard-toggle';
+    button.className = 'tool-btn';
+    button.textContent = 'Orchard Food: On';
+    button.title = 'Places 3 native FlyBrain food objects. Food regrows after 30 seconds when eaten.';
+    button.setAttribute('aria-pressed', 'true');
+    const gardenToggle = document.getElementById('flytopia-garden-toggle');
+    if (gardenToggle) gardenToggle.insertAdjacentElement('afterend', button);
+    else toolbar.appendChild(button);
+    button.addEventListener('click', () => {
+      enabled = !enabled;
+      button.textContent = enabled ? 'Orchard Food: On' : 'Orchard Food: Off';
+      button.setAttribute('aria-pressed', String(enabled));
+      const caption = document.getElementById('flytopia-garden-caption');
+      if (caption) caption.textContent = enabled
+        ? 'SANCTUARY GROVE / 3 EDIBLE FRUIT PATCHES / NATIVE FOOD SENSORS'
+        : 'SANCTUARY GROVE / ORCHARD FOOD DISABLED / FEED STILL WORKS';
+    });
+    const caption = document.getElementById('flytopia-garden-caption');
+    if (caption) caption.textContent = 'SANCTUARY GROVE / 3 EDIBLE FRUIT PATCHES / NATIVE FOOD SENSORS';
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupOrchardControls, {once: true});
+  } else setupOrchardControls();
+})();

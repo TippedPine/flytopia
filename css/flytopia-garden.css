@@ -1,0 +1,27 @@
+/* Flytopia v0.3: the garden is painted in main.js BEFORE food and the fly.
+   No full-screen overlay or high z-index. */
+#flytopia-garden-layer { display: none !important; }
+#flytopia-garden-caption {
+  position: fixed;
+  left: 14px;
+  bottom: 192px;
+  z-index: 12;
+  pointer-events: none;
+  max-width: calc(100vw - 40px);
+  border-radius: 999px;
+  border: 1px solid rgba(190, 227, 174, 0.3);
+  background: rgba(12, 38, 29, 0.82);
+  color: #e8f5dc;
+  font: 650 10px/1.3 system-ui, -apple-system, sans-serif;
+  letter-spacing: .04em;
+  padding: 7px 12px;
+}
+#flytopia-garden-caption[hidden] { display: none !important; }
+#flytopia-garden-toggle { white-space: nowrap; }
+#flytopia-garden-toggle[aria-pressed="false"] { opacity: 0.7; }
+@media(max-width:768px) {
+  #flytopia-garden-caption { left: 8px; bottom: 132px; font-size: 9px; padding: 5px 8px; }
+}
+@media (orientation: landscape) and (max-height:500px) {
+  #flytopia-garden-caption { bottom: 12px; max-width:calc(100vw - 310px); }
+}

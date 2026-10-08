@@ -1933,11 +1933,6 @@ function update(dt) {
 		touchResetTime = Math.max(touchResetTime, Date.now() + 2000);
 	}
 
-	// Flytopia v0.4: add edible orchard fruit using FlyBrain's native food array.
-	if (window.FlytopiaGarden && typeof window.FlytopiaGarden.updateFood === 'function') {
-		window.FlytopiaGarden.updateFood(food);
-	}
-
 	// Food proximity
 	BRAIN.stimulate.foodContact = false;
 	BRAIN.stimulate.foodNearby = false;
@@ -1984,9 +1979,6 @@ function update(dt) {
 		}
 	}
 
-	// Flytopia v0.5: sensory cue after native food proximity (opt-in only).
-	if (window.FlytopiaSenses) window.FlytopiaSenses.update(food, fly, BRAIN);
-
 	// Reset touch stimulus after wall-clock expiry (2 seconds)
 	if (touchResetTime > 0 && Date.now() >= touchResetTime) {
 		BRAIN.stimulate.touch = false;
@@ -2032,8 +2024,6 @@ function draw() {
 		window.FlytopiaGarden.draw(ctx, window.innerWidth, window.innerHeight);
 	}
 
-	// Flytopia v0.5: sensor overlay in WORLD coordinates behind native food and fly.
-	if (window.FlytopiaSenses) window.FlytopiaSenses.draw(ctx, food, fly);
 	drawFood();
 	drawRipples();
 	drawWindArrow();
