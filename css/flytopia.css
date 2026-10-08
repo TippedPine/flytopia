@@ -1,0 +1,111 @@
+/* Flytopia v0.1 — presentation only. No neural simulation changes. */
+:root {
+  --flytopia-deep: #122b24;
+  --flytopia-forest: #1d4432;
+  --flytopia-leaf: #b4e3a5;
+  --flytopia-gold: #f4d995;
+}
+
+/* Experimental controls remain in the DOM for upstream JavaScript compatibility. */
+body.flytopia-mode:not(.flytopia-debug) #toolbar [data-tool="touch"],
+body.flytopia-mode:not(.flytopia-debug) #toolbar [data-tool="air"],
+body.flytopia-mode:not(.flytopia-debug) #helpOverlay .flytopia-research-help {
+  display: none !important;
+}
+
+body.flytopia-mode #toolbar {
+  background: linear-gradient(112deg, var(--flytopia-deep), var(--flytopia-forest)) !important;
+  border-bottom: 1px solid rgba(180, 227, 165, 0.22) !important;
+  box-shadow: 0 5px 18px rgba(15, 40, 27, 0.18);
+}
+
+body.flytopia-mode #toolbar .toolbar-title {
+  color: #f7f4dc !important;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+
+body.flytopia-mode #toolbar .tool-btn {
+  color: #ecf5e5;
+  background: rgba(255, 255, 255, 0.085);
+  border-color: rgba(224, 241, 214, 0.3);
+}
+
+body.flytopia-mode #toolbar .tool-btn.active,
+body.flytopia-mode #toolbar .tool-btn:hover {
+  background: rgba(180, 227, 165, 0.24);
+  border-color: rgba(180, 227, 165, 0.7);
+}
+
+.flytopia-welcome {
+  position: fixed;
+  top: 84px;
+  right: 18px;
+  width: min(348px, calc(100vw - 36px));
+  padding: 21px 22px;
+  z-index: 900;
+  box-sizing: border-box;
+  color: #f9f7e9;
+  background: linear-gradient(152deg, rgba(26, 65, 45, 0.97), rgba(16, 43, 37, 0.97));
+  border: 1px solid rgba(217, 236, 179, 0.3);
+  border-radius: 18px;
+  box-shadow: 0 15px 38px rgba(9, 28, 22, 0.32);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.flytopia-welcome .flytopia-kicker {
+  color: var(--flytopia-leaf);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.flytopia-welcome h2 {
+  margin: 0 0 8px;
+  color: #fff9e0;
+  font-size: 22px;
+  line-height: 1.22;
+  font-weight: 750;
+}
+
+.flytopia-welcome p {
+  margin: 8px 0;
+  color: #d8e7d5;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.flytopia-welcome .flytopia-tagline {
+  font-size: 12px;
+  color: var(--flytopia-gold);
+  font-weight: 700;
+}
+
+.flytopia-welcome .flytopia-action {
+  margin-top: 14px;
+  padding: 9px 14px;
+  border: 1px solid rgba(228, 240, 197, 0.55);
+  border-radius: 999px;
+  background: rgba(180, 227, 165, 0.19);
+  color: #f6f7dd;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.flytopia-welcome .flytopia-action:hover,
+.flytopia-welcome .flytopia-action:focus-visible {
+  background: rgba(180, 227, 165, 0.32);
+}
+
+@media (max-width: 650px) {
+  .flytopia-welcome {
+    top: auto;
+    bottom: 22px;
+    right: 12px;
+    width: min(330px, calc(100vw - 24px));
+    padding: 17px 18px;
+  }
+}
