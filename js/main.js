@@ -2007,6 +2007,11 @@ function update(dt) {
 
 // --- Draw ---
 function draw() {
+	// Flytopia v0.6: automated ambient light and local grove shade.
+	if (window.FlytopiaDayNight) {
+		window.FlytopiaDayNight.update(BRAIN, fly, window.innerWidth, window.innerHeight, performance.now());
+	}
+
 	// Update canvas background based on light level
 	var ll = BRAIN.stimulate.lightLevel;
 	if (ll >= 1) {
@@ -2030,6 +2035,11 @@ function draw() {
 	// Flytopia v0.3: draw garden beneath native food and fly rendering.
 	if (window.FlytopiaGarden && window.FlytopiaGarden.enabled) {
 		window.FlytopiaGarden.draw(ctx, window.innerWidth, window.innerHeight);
+	}
+
+	// Flytopia v0.6: canopy drawn below all original simulation objects.
+	if (window.FlytopiaDayNight) {
+		window.FlytopiaDayNight.drawGrove(ctx, window.innerWidth, window.innerHeight);
 	}
 
 	// Flytopia v0.5: sensor overlay in WORLD coordinates behind native food and fly.
@@ -2060,6 +2070,10 @@ function draw() {
 	if (typeof CaretakerRenderer !== 'undefined') { CaretakerRenderer.drawOverlay(ctx); }
 
 	ctx.restore(); // end zoom/pan transform
+	// v0.6: screen-space light tint after the fly, before browser UI layers.
+	if (window.FlytopiaDayNight) {
+		window.FlytopiaDayNight.drawAtmosphere(ctx, window.innerWidth, window.innerHeight);
+	}
 }
 
 // --- Resize (with high-DPI support) ---
